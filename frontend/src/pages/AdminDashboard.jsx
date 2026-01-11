@@ -224,6 +224,21 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
+  const loadAllContacts = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/all-contacts`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      setAllContacts(data.contacts || []);
+      setContactsSummary(data.summary || null);
+    } catch (error) {
+      console.error('Failed to load contacts:', error);
+    }
+    setLoading(false);
+  };
+
   const loadAnalytics = async () => {
     setLoading(true);
     try {
