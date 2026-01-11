@@ -789,47 +789,93 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* Users Tab */}
+        {/* Users Tab - Enhanced View */}
         {activeTab === 'users' && (
           <div className="admin-table-container">
             <div className="table-header">
-              <h2>Registered Users ({users.length})</h2>
+              <h2>All Accounts ({users.length})</h2>
               <button onClick={loadUsers} className="refresh-btn">
                 <RefreshCw size={16} /> Refresh
               </button>
             </div>
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Name</th>
-                  <th>Provider</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user, i) => (
-                  <tr key={i}>
-                    <td>{user.email}</td>
-                    <td>{user.name || '-'}</td>
-                    <td>{user.auth_provider}</td>
-                    <td>{new Date(user.created_at).toLocaleDateString()}</td>
-                    <td>
-                      <button 
-                        onClick={() => deleteUser(user.user_id, user.email)}
-                        className="delete-btn"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
+            <div className="table-scroll">
+              <table className="admin-table enhanced">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Discipline</th>
+                    <th>Source</th>
+                    <th>Provider</th>
+                    <th>Giveaway</th>
+                    <th>Waitlist</th>
+                    <th>Cart</th>
+                    <th>Orders</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-                {users.length === 0 && (
-                  <tr><td colSpan="5" className="empty-row">No users found</td></tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {users.map((user, i) => (
+                    <tr key={i}>
+                      <td className="email-cell">{user.email}</td>
+                      <td>{user.name || '-'}</td>
+                      <td>
+                        <span className={`discipline-badge ${(user.discipline || 'unknown').toLowerCase()}`}>
+                          {user.discipline || 'Unknown'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`source-badge ${user.signup_source || 'direct'}`}>
+                          {user.signup_source || 'Direct'}
+                        </span>
+                      </td>
+                      <td>{user.auth_provider || '-'}</td>
+                      <td>
+                        {user.has_giveaway_entry ? (
+                          <span className="status-yes"><Check size={14} /></span>
+                        ) : (
+                          <span className="status-no"><X size={14} /></span>
+                        )}
+                      </td>
+                      <td>
+                        {user.waitlist_count > 0 ? (
+                          <span className="waitlist-badge" title={user.waitlist_products?.join(', ')}>
+                            {user.waitlist_count} item{user.waitlist_count > 1 ? 's' : ''}
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td>
+                        {user.has_cart ? (
+                          <span className="status-yes"><Check size={14} /></span>
+                        ) : (
+                          <span className="status-no"><X size={14} /></span>
+                        )}
+                      </td>
+                      <td>
+                        {user.orders_count > 0 ? (
+                          <span className="orders-badge">
+                            {user.orders_count} (${user.total_spent?.toFixed(0) || 0})
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                      <td>
+                        <button 
+                          onClick={() => deleteUser(user.user_id, user.email)}
+                          className="delete-btn"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {users.length === 0 && (
+                    <tr><td colSpan="11" className="empty-row">No users found</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
