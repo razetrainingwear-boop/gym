@@ -997,9 +997,78 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            <button onClick={() => loadStats()} className="refresh-btn">
-              <RefreshCw size={16} /> Refresh Stats
-            </button>
+            {/* Action Buttons Row */}
+            <div className="action-buttons-row">
+              <button onClick={() => loadStats()} className="refresh-btn">
+                <RefreshCw size={16} /> Refresh Stats
+              </button>
+              <button onClick={pickGiveawayWinner} className="action-btn giveaway">
+                <Shuffle size={16} /> Pick Giveaway Winner
+              </button>
+              <label className="auto-refresh-toggle">
+                <input 
+                  type="checkbox" 
+                  checked={autoRefresh} 
+                  onChange={(e) => setAutoRefresh(e.target.checked)}
+                />
+                Auto-refresh (30s)
+              </label>
+            </div>
+
+            {/* Search & Filter Section */}
+            <div className="search-filter-section">
+              <h4><Search size={18} /> Search & Filter</h4>
+              <div className="search-row">
+                <input
+                  type="text"
+                  placeholder="Search by email or name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input"
+                />
+                <select value={filterDiscipline} onChange={(e) => setFilterDiscipline(e.target.value)} className="filter-select">
+                  <option value="all">All Disciplines</option>
+                  <option value="MAG">MAG</option>
+                  <option value="WAG">WAG</option>
+                </select>
+                <select value={filterSource} onChange={(e) => setFilterSource(e.target.value)} className="filter-select">
+                  <option value="all">All Sources</option>
+                  <option value="giveaway_popup">Giveaway</option>
+                  <option value="early_access">Early Access</option>
+                  <option value="waitlist">Waitlist</option>
+                </select>
+                <input type="date" value={customDateStart} onChange={(e) => setCustomDateStart(e.target.value)} className="date-input" />
+                <input type="date" value={customDateEnd} onChange={(e) => setCustomDateEnd(e.target.value)} className="date-input" />
+                <button onClick={searchContacts} className="search-btn">
+                  <Search size={16} /> Search
+                </button>
+              </div>
+              
+              {searchResults.length > 0 && (
+                <div className="search-results">
+                  <h5>Found {searchResults.length} results</h5>
+                  <div className="results-list">
+                    {searchResults.slice(0, 20).map((r, i) => (
+                      <div key={i} className="result-item" onClick={() => loadUserDetails(r.email)}>
+                        <span className="result-email">{r.email}</span>
+                        <span className={`discipline-badge ${(r.discipline || 'unknown').toLowerCase()}`}>{r.discipline}</span>
+                        <span className={`source-badge ${r.source}`}>{r.source}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Giveaway Winner Display */}
+            {giveawayWinner && (
+              <div className="giveaway-winner-card">
+                <h4>🎉 Giveaway Winner</h4>
+                <p className="winner-email">{giveawayWinner.email}</p>
+                <p className="winner-name">{giveawayWinner.name || 'No name provided'}</p>
+                <button onClick={() => setGiveawayWinner(null)} className="close-btn">×</button>
+              </div>
+            )}
           </div>
         )}
 
