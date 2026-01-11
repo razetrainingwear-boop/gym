@@ -412,28 +412,23 @@ const AdminDashboard = () => {
     }
   }, [activeTab, isAuthenticated]);
 
-  // Login Screen
+  // Login Screen - only shown if not admin
   if (!isAuthenticated) {
     return (
       <div className="admin-login-page">
         <div className="admin-login-container">
           <h1>Admin Access</h1>
-          <p>Enter admin password to continue</p>
-          
-          <form onSubmit={handleLogin}>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Admin Password"
-              className="admin-password-input"
-              autoFocus
-            />
-            {loginError && <p className="admin-error">{loginError}</p>}
-            <button type="submit" className="admin-login-btn">
-              Access Dashboard
-            </button>
-          </form>
+          <p>You must be logged in as an admin to access this page.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '16px' }}>
+            Please log in with your admin account (joviloh25@gmail.com)
+          </p>
+          <button 
+            onClick={() => navigate('/')} 
+            className="admin-login-btn"
+            style={{ marginTop: '20px' }}
+          >
+            Go to Home
+          </button>
         </div>
       </div>
     );
