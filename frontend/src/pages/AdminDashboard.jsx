@@ -466,8 +466,9 @@ const AdminDashboard = () => {
       <div className="admin-tabs">
         {[
           { id: 'overview', label: 'Overview', icon: <ChevronDown size={18} /> },
+          { id: 'contacts', label: 'All Contacts', icon: <Users size={18} /> },
           { id: 'analytics', label: 'Analytics', icon: <BarChart3 size={18} /> },
-          { id: 'users', label: 'Users', icon: <Users size={18} /> },
+          { id: 'users', label: 'Signed Up', icon: <Users size={18} /> },
           { id: 'subscribers', label: 'Subscribers', icon: <Mail size={18} /> },
           { id: 'waitlist', label: 'Waitlist', icon: <Clock size={18} /> },
           { id: 'orders', label: 'Orders', icon: <ShoppingBag size={18} /> },
