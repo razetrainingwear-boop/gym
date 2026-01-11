@@ -803,9 +803,11 @@ const AdminDashboard = () => {
           { id: 'overview', label: 'Overview', icon: <ChevronDown size={18} /> },
           { id: 'contacts', label: 'All Contacts', icon: <Users size={18} /> },
           { id: 'analytics', label: 'Analytics', icon: <BarChart3 size={18} /> },
-          { id: 'users', label: 'Signed Up', icon: <Users size={18} /> },
-          { id: 'subscribers', label: 'Subscribers', icon: <Mail size={18} /> },
-          { id: 'waitlist', label: 'Waitlist', icon: <Clock size={18} /> },
+          { id: 'inventory', label: 'Inventory', icon: <Package size={18} /> },
+          { id: 'discounts', label: 'Discounts', icon: <Tag size={18} /> },
+          { id: 'activity', label: 'Activity Log', icon: <Activity size={18} /> },
+          { id: 'email-logs', label: 'Email Status', icon: <AlertCircle size={18} /> },
+          { id: 'duplicates', label: 'Duplicates', icon: <Copy size={18} /> },
           { id: 'orders', label: 'Orders', icon: <ShoppingBag size={18} /> },
           { id: 'email', label: 'Send Email', icon: <Send size={18} /> }
         ].map(tab => (
