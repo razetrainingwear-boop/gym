@@ -3128,8 +3128,8 @@ async def get_admin_stats(request: Request, timeframe: str = "all"):
     }
 
 @api_router.get("/admin/users")
-async def get_all_users(request: Request, skip: int = 0, limit: int = 100):
-    """Get all registered users"""
+async def get_all_users(request: Request, skip: int = 0, limit: int = 500):
+    """Get all registered users with their activity data"""
     await verify_admin(request)
     
     users = await db.users.find(
@@ -3137,13 +3137,179 @@ async def get_all_users(request: Request, skip: int = 0, limit: int = 100):
         {"_id": 0, "password_hash": 0}  # Exclude sensitive data
     ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
+    # Enrich each user with their activity data
+    enriched_users = []
+    for user in users:
+        email = user.get('email', '')
+        
+        # Check if user is in waitlist
+        waitlist_entries = await db.waitlist.find({"email": email}, {"_id": 0}).to_list(100)
+        
+        # Check if user has any email subscriptions (giveaway, early_access, etc.)
+        subscriptions = await db.email_subscriptions.find({"email": email}, {"_id": 0}).to_list(100)
+        
+        # Check if user has any orders
+        orders = await db.orders.find({"customer_email": email}, {"_id": 0, "order_id": 1, "total": 1, "status": 1}).to_list(100)
+        
+        # Check if user has any abandoned carts
+        carts = await db.carts.find({"email": email}, {"_id": 0}).to_list(10)
+        
+        # Determine signup source
+        signup_source = "direct"
+        for sub in subscriptions:
+            if sub.get('source') == 'giveaway_popup':
+                signup_source = "giveaway"
+                break
+            elif sub.get('source') == 'early_access':
+                signup_source = "early_access"
+                break
+            elif sub.get('source') == 'waitlist_notification':
+                signup_source = "waitlist"
+                break
+        
+        enriched_users.append({
+            **user,
+            "signup_source": signup_source,
+            "discipline": user.get('discipline', 'unknown'),
+            "waitlist_count": len(waitlist_entries),
+            "waitlist_products": [w.get('product_name', '') for w in waitlist_entries],
+            "subscription_sources": list(set([s.get('source', '') for s in subscriptions])),
+            "has_giveaway_entry": any(s.get('source') == 'giveaway_popup' for s in subscriptions),
+            "orders_count": len(orders),
+            "total_spent": sum(o.get('total', 0) for o in orders),
+            "has_cart": len(carts) > 0,
+            "cart_items": carts[0].get('items', []) if carts else []
+        })
+    
     total = await db.users.count_documents({})
     
     return {
-        "users": users,
+        "users": enriched_users,
         "total": total,
         "skip": skip,
         "limit": limit
+    }
+
+@api_router.get("/admin/all-contacts")
+async def get_all_contacts(request: Request):
+    """Get comprehensive list of all contacts (users, subscribers, waitlist) with their activities"""
+    await verify_admin(request)
+    
+    # Get all unique emails from all sources
+    all_contacts = {}
+    
+    # 1. Get all users
+    users = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    for user in users:
+        email = user.get('email', '').lower()
+        if email:
+            all_contacts[email] = {
+                "email": email,
+                "name": user.get('name', ''),
+                "discipline": user.get('discipline', 'unknown'),
+                "auth_provider": user.get('auth_provider', ''),
+                "signed_up": True,
+                "signup_date": user.get('created_at', ''),
+                "signup_source": "direct",
+                "has_giveaway_entry": False,
+                "has_early_access": False,
+                "waitlist_products": [],
+                "orders_count": 0,
+                "total_spent": 0,
+                "has_cart": False
+            }
+    
+    # 2. Get all email subscriptions
+    subscriptions = await db.email_subscriptions.find({}, {"_id": 0}).to_list(5000)
+    for sub in subscriptions:
+        email = sub.get('email', '').lower()
+        source = sub.get('source', '')
+        
+        if email not in all_contacts:
+            all_contacts[email] = {
+                "email": email,
+                "name": sub.get('name', ''),
+                "discipline": sub.get('discipline', 'unknown'),
+                "auth_provider": "",
+                "signed_up": False,
+                "signup_date": sub.get('timestamp', ''),
+                "signup_source": source,
+                "has_giveaway_entry": False,
+                "has_early_access": False,
+                "waitlist_products": [],
+                "orders_count": 0,
+                "total_spent": 0,
+                "has_cart": False
+            }
+        
+        if source == 'giveaway_popup':
+            all_contacts[email]["has_giveaway_entry"] = True
+            if all_contacts[email]["signup_source"] == "direct":
+                all_contacts[email]["signup_source"] = "giveaway"
+        elif source == 'early_access':
+            all_contacts[email]["has_early_access"] = True
+            if all_contacts[email]["signup_source"] == "direct":
+                all_contacts[email]["signup_source"] = "early_access"
+    
+    # 3. Get all waitlist entries
+    waitlist = await db.waitlist.find({}, {"_id": 0}).to_list(5000)
+    for entry in waitlist:
+        email = entry.get('email', '').lower()
+        product = entry.get('product_name', '')
+        
+        if email not in all_contacts:
+            all_contacts[email] = {
+                "email": email,
+                "name": entry.get('name', ''),
+                "discipline": entry.get('discipline', 'unknown'),
+                "auth_provider": "",
+                "signed_up": False,
+                "signup_date": entry.get('created_at', ''),
+                "signup_source": "waitlist",
+                "has_giveaway_entry": False,
+                "has_early_access": False,
+                "waitlist_products": [],
+                "orders_count": 0,
+                "total_spent": 0,
+                "has_cart": False
+            }
+        
+        if product and product not in all_contacts[email]["waitlist_products"]:
+            all_contacts[email]["waitlist_products"].append(product)
+    
+    # 4. Get all orders
+    orders = await db.orders.find({}, {"_id": 0, "customer_email": 1, "total": 1}).to_list(5000)
+    for order in orders:
+        email = (order.get('customer_email', '') or '').lower()
+        if email and email in all_contacts:
+            all_contacts[email]["orders_count"] += 1
+            all_contacts[email]["total_spent"] += order.get('total', 0)
+    
+    # 5. Get all carts
+    carts = await db.carts.find({}, {"_id": 0, "email": 1}).to_list(5000)
+    for cart in carts:
+        email = (cart.get('email', '') or '').lower()
+        if email and email in all_contacts:
+            all_contacts[email]["has_cart"] = True
+    
+    # Convert to list and sort by signup date
+    contacts_list = list(all_contacts.values())
+    contacts_list.sort(key=lambda x: x.get('signup_date', ''), reverse=True)
+    
+    return {
+        "contacts": contacts_list,
+        "total": len(contacts_list),
+        "summary": {
+            "total_signed_up": sum(1 for c in contacts_list if c["signed_up"]),
+            "total_giveaway": sum(1 for c in contacts_list if c["has_giveaway_entry"]),
+            "total_early_access": sum(1 for c in contacts_list if c["has_early_access"]),
+            "total_with_waitlist": sum(1 for c in contacts_list if c["waitlist_products"]),
+            "total_with_orders": sum(1 for c in contacts_list if c["orders_count"] > 0),
+            "total_with_cart": sum(1 for c in contacts_list if c["has_cart"]),
+            "mag_count": sum(1 for c in contacts_list if c["discipline"] == "MAG"),
+            "wag_count": sum(1 for c in contacts_list if c["discipline"] == "WAG"),
+            "other_count": sum(1 for c in contacts_list if c["discipline"] not in ["MAG", "WAG"])
+        }
     }
 
 @api_router.get("/admin/subscribers")
