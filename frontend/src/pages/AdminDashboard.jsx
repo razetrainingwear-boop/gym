@@ -1077,9 +1077,19 @@ const AdminDashboard = () => {
           <div className="admin-table-container">
             <div className="table-header">
               <h2>All Contacts ({allContacts.length})</h2>
-              <button onClick={loadAllContacts} className="refresh-btn">
-                <RefreshCw size={16} /> Refresh
-              </button>
+              <div className="header-actions">
+                <button onClick={exportToCSV} className="action-btn export">
+                  <Download size={16} /> Export CSV
+                </button>
+                {selectedContacts.length > 0 && (
+                  <button onClick={bulkDeleteContacts} className="action-btn delete">
+                    <Trash2 size={16} /> Delete ({selectedContacts.length})
+                  </button>
+                )}
+                <button onClick={loadAllContacts} className="refresh-btn">
+                  <RefreshCw size={16} /> Refresh
+                </button>
+              </div>
             </div>
             
             {/* Summary Cards */}
