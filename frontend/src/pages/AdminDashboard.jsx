@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -18,7 +18,21 @@ import {
   DollarSign,
   Gift,
   Calendar,
-  Target
+  Target,
+  Download,
+  Search,
+  Eye,
+  Package,
+  Activity,
+  Tag,
+  AlertCircle,
+  Copy,
+  MessageSquare,
+  RotateCcw,
+  Shuffle,
+  FileText,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import {
   AreaChart,
@@ -58,6 +72,27 @@ const AdminDashboard = () => {
   const [contactsSummary, setContactsSummary] = useState(null);
   const [analyticsData, setAnalyticsData] = useState(null);
   
+  // New feature states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [filterDiscipline, setFilterDiscipline] = useState('all');
+  const [filterSource, setFilterSource] = useState('all');
+  const [customDateStart, setCustomDateStart] = useState('');
+  const [customDateEnd, setCustomDateEnd] = useState('');
+  const [selectedContacts, setSelectedContacts] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userDetails, setUserDetails] = useState(null);
+  const [inventory, setInventory] = useState([]);
+  const [activityLog, setActivityLog] = useState([]);
+  const [discountCodes, setDiscountCodes] = useState([]);
+  const [emailLogs, setEmailLogs] = useState([]);
+  const [emailLogsSummary, setEmailLogsSummary] = useState(null);
+  const [duplicates, setDuplicates] = useState([]);
+  const [newNote, setNewNote] = useState('');
+  const [giveawayWinner, setGiveawayWinner] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [newDiscountCode, setNewDiscountCode] = useState({ code: '', discount_percent: 10, max_uses: 0 });
+  
   // Email form state
   const [emailForm, setEmailForm] = useState({
     subject: '',
@@ -72,13 +107,25 @@ const AdminDashboard = () => {
     { value: '7d', label: 'Last 7 Days' },
     { value: '30d', label: 'Last 30 Days' },
     { value: '90d', label: 'Last 90 Days' },
-    { value: 'all', label: 'All Time' }
+    { value: 'all', label: 'All Time' },
+    { value: 'custom', label: 'Custom Range' }
   ];
 
   // Check if already authenticated
   useEffect(() => {
     checkAuth();
   }, [user]);
+  
+  // Auto-refresh effect
+  useEffect(() => {
+    let interval;
+    if (autoRefresh && isAuthenticated) {
+      interval = setInterval(() => {
+        loadStats();
+      }, 30000); // Refresh every 30 seconds
+    }
+    return () => clearInterval(interval);
+  }, [autoRefresh, isAuthenticated]);
 
   const checkAuth = async () => {
     // If user is logged in and is admin, auto-authenticate immediately
