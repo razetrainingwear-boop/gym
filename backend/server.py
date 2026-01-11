@@ -3373,6 +3373,531 @@ async def get_all_orders(request: Request, skip: int = 0, limit: int = 100):
         "limit": limit
     }
 
+# ============== NEW ADMIN FEATURES ==============
+
+@api_router.get("/admin/export/contacts")
+async def export_contacts_csv(request: Request):
+    """Export all contacts to CSV format"""
+    await verify_admin(request)
+    
+    # Get all contacts using the same logic as all-contacts endpoint
+    all_contacts = {}
+    
+    users = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(10000)
+    for user in users:
+        email = user.get('email', '').lower()
+        if email:
+            all_contacts[email] = {
+                "email": email,
+                "name": user.get('name', ''),
+                "discipline": user.get('discipline', 'unknown'),
+                "auth_provider": user.get('auth_provider', ''),
+                "signed_up": "Yes",
+                "signup_date": user.get('created_at', ''),
+                "has_giveaway": "No",
+                "has_early_access": "No",
+                "waitlist_products": "",
+                "orders_count": 0,
+                "total_spent": 0
+            }
+    
+    subscriptions = await db.email_subscriptions.find({}, {"_id": 0}).to_list(10000)
+    for sub in subscriptions:
+        email = sub.get('email', '').lower()
+        source = sub.get('source', '')
+        if email not in all_contacts:
+            all_contacts[email] = {
+                "email": email,
+                "name": sub.get('name', ''),
+                "discipline": sub.get('discipline', 'unknown'),
+                "auth_provider": "",
+                "signed_up": "No",
+                "signup_date": sub.get('timestamp', ''),
+                "has_giveaway": "No",
+                "has_early_access": "No",
+                "waitlist_products": "",
+                "orders_count": 0,
+                "total_spent": 0
+            }
+        if source == 'giveaway_popup':
+            all_contacts[email]["has_giveaway"] = "Yes"
+        elif source == 'early_access':
+            all_contacts[email]["has_early_access"] = "Yes"
+    
+    waitlist = await db.waitlist.find({}, {"_id": 0}).to_list(10000)
+    for entry in waitlist:
+        email = entry.get('email', '').lower()
+        product = entry.get('product_name', '')
+        if email in all_contacts:
+            existing = all_contacts[email]["waitlist_products"]
+            all_contacts[email]["waitlist_products"] = f"{existing}, {product}" if existing else product
+    
+    orders = await db.orders.find({}, {"_id": 0, "customer_email": 1, "total": 1}).to_list(10000)
+    for order in orders:
+        email = (order.get('customer_email', '') or '').lower()
+        if email and email in all_contacts:
+            all_contacts[email]["orders_count"] += 1
+            all_contacts[email]["total_spent"] += order.get('total', 0)
+    
+    # Convert to CSV
+    import csv
+    import io
+    output = io.StringIO()
+    fieldnames = ["email", "name", "discipline", "auth_provider", "signed_up", "signup_date", 
+                  "has_giveaway", "has_early_access", "waitlist_products", "orders_count", "total_spent"]
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    for contact in all_contacts.values():
+        writer.writerow(contact)
+    
+    from fastapi.responses import StreamingResponse
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=raze_contacts.csv"}
+    )
+
+@api_router.get("/admin/search")
+async def search_contacts(request: Request, q: str = "", discipline: str = "", source: str = "", 
+                          start_date: str = "", end_date: str = ""):
+    """Search and filter contacts"""
+    await verify_admin(request)
+    
+    results = []
+    
+    # Search users
+    user_query = {}
+    if q:
+        user_query["$or"] = [
+            {"email": {"$regex": q, "$options": "i"}},
+            {"name": {"$regex": q, "$options": "i"}}
+        ]
+    if discipline and discipline != "all":
+        user_query["discipline"] = discipline
+    if start_date:
+        user_query["created_at"] = {"$gte": start_date}
+    if end_date:
+        if "created_at" in user_query:
+            user_query["created_at"]["$lte"] = end_date
+        else:
+            user_query["created_at"] = {"$lte": end_date}
+    
+    users = await db.users.find(user_query, {"_id": 0, "password_hash": 0}).to_list(500)
+    for user in users:
+        results.append({
+            "email": user.get('email', ''),
+            "name": user.get('name', ''),
+            "discipline": user.get('discipline', 'unknown'),
+            "type": "user",
+            "source": user.get('auth_provider', 'direct'),
+            "date": user.get('created_at', '')
+        })
+    
+    # Search subscribers
+    sub_query = {}
+    if q:
+        sub_query["email"] = {"$regex": q, "$options": "i"}
+    if source and source != "all":
+        sub_query["source"] = source
+    if start_date:
+        sub_query["timestamp"] = {"$gte": start_date}
+    if end_date:
+        if "timestamp" in sub_query:
+            sub_query["timestamp"]["$lte"] = end_date
+        else:
+            sub_query["timestamp"] = {"$lte": end_date}
+    
+    subs = await db.email_subscriptions.find(sub_query, {"_id": 0}).to_list(500)
+    for sub in subs:
+        email = sub.get('email', '')
+        if not any(r['email'] == email for r in results):
+            results.append({
+                "email": email,
+                "name": sub.get('name', ''),
+                "discipline": sub.get('discipline', 'unknown'),
+                "type": "subscriber",
+                "source": sub.get('source', ''),
+                "date": sub.get('timestamp', '')
+            })
+    
+    return {"results": results, "total": len(results)}
+
+@api_router.get("/admin/giveaway/pick-winner")
+async def pick_giveaway_winner(request: Request):
+    """Randomly pick a giveaway winner"""
+    await verify_admin(request)
+    import random
+    
+    entries = await db.email_subscriptions.find(
+        {"source": "giveaway_popup"},
+        {"_id": 0}
+    ).to_list(10000)
+    
+    if not entries:
+        return {"success": False, "message": "No giveaway entries found"}
+    
+    winner = random.choice(entries)
+    
+    # Log the winner selection
+    await db.activity_log.insert_one({
+        "action": "giveaway_winner_picked",
+        "winner_email": winner.get('email'),
+        "total_entries": len(entries),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "success": True,
+        "winner": winner,
+        "total_entries": len(entries)
+    }
+
+@api_router.get("/admin/user/{email}/details")
+async def get_user_details(request: Request, email: str):
+    """Get detailed view of a single user's activity"""
+    await verify_admin(request)
+    
+    email_lower = email.lower()
+    
+    # Get user account
+    user = await db.users.find_one({"email": {"$regex": f"^{email_lower}$", "$options": "i"}}, {"_id": 0, "password_hash": 0})
+    
+    # Get all subscriptions
+    subscriptions = await db.email_subscriptions.find({"email": {"$regex": f"^{email_lower}$", "$options": "i"}}, {"_id": 0}).to_list(100)
+    
+    # Get waitlist entries
+    waitlist = await db.waitlist.find({"email": {"$regex": f"^{email_lower}$", "$options": "i"}}, {"_id": 0}).to_list(100)
+    
+    # Get orders
+    orders = await db.orders.find({"customer_email": {"$regex": f"^{email_lower}$", "$options": "i"}}, {"_id": 0}).to_list(100)
+    
+    # Get carts
+    carts = await db.carts.find({"email": {"$regex": f"^{email_lower}$", "$options": "i"}}, {"_id": 0}).to_list(10)
+    
+    # Get notes
+    notes = await db.user_notes.find({"email": {"$regex": f"^{email_lower}$", "$options": "i"}}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    # Get email logs
+    email_logs = await db.email_logs.find({"recipient": {"$regex": f"^{email_lower}$", "$options": "i"}}, {"_id": 0}).sort("sent_at", -1).to_list(50)
+    
+    return {
+        "email": email,
+        "user": user,
+        "subscriptions": subscriptions,
+        "waitlist": waitlist,
+        "orders": orders,
+        "carts": carts,
+        "notes": notes,
+        "email_logs": email_logs
+    }
+
+@api_router.get("/admin/inventory")
+async def get_inventory(request: Request):
+    """Get current inventory levels"""
+    await verify_admin(request)
+    
+    inventory = await db.inventory.find({}, {"_id": 0}).to_list(1000)
+    return {"inventory": inventory}
+
+@api_router.put("/admin/inventory/{product_id}")
+async def update_inventory(request: Request, product_id: int, size: str, quantity: int):
+    """Update inventory for a product"""
+    await verify_admin(request)
+    
+    result = await db.inventory.update_one(
+        {"product_id": product_id, "size": size},
+        {"$set": {"quantity": quantity, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Log the change
+    await db.activity_log.insert_one({
+        "action": "inventory_update",
+        "product_id": product_id,
+        "size": size,
+        "new_quantity": quantity,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"success": result.modified_count > 0}
+
+@api_router.delete("/admin/contact/{email}")
+async def delete_contact(request: Request, email: str):
+    """Delete a contact from all collections"""
+    await verify_admin(request)
+    
+    email_lower = email.lower()
+    
+    # Delete from all collections
+    deleted = {
+        "users": (await db.users.delete_many({"email": {"$regex": f"^{email_lower}$", "$options": "i"}})).deleted_count,
+        "subscriptions": (await db.email_subscriptions.delete_many({"email": {"$regex": f"^{email_lower}$", "$options": "i"}})).deleted_count,
+        "waitlist": (await db.waitlist.delete_many({"email": {"$regex": f"^{email_lower}$", "$options": "i"}})).deleted_count,
+        "carts": (await db.carts.delete_many({"email": {"$regex": f"^{email_lower}$", "$options": "i"}})).deleted_count
+    }
+    
+    # Log the deletion
+    await db.activity_log.insert_one({
+        "action": "contact_deleted",
+        "email": email,
+        "deleted_counts": deleted,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"success": True, "deleted": deleted}
+
+@api_router.post("/admin/bulk-delete")
+async def bulk_delete_contacts(request: Request, emails: List[str] = []):
+    """Delete multiple contacts at once"""
+    await verify_admin(request)
+    
+    deleted_total = 0
+    for email in emails:
+        email_lower = email.lower()
+        deleted_total += (await db.users.delete_many({"email": {"$regex": f"^{email_lower}$", "$options": "i"}})).deleted_count
+        deleted_total += (await db.email_subscriptions.delete_many({"email": {"$regex": f"^{email_lower}$", "$options": "i"}})).deleted_count
+        deleted_total += (await db.waitlist.delete_many({"email": {"$regex": f"^{email_lower}$", "$options": "i"}})).deleted_count
+    
+    await db.activity_log.insert_one({
+        "action": "bulk_delete",
+        "emails": emails,
+        "deleted_count": deleted_total,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"success": True, "deleted_count": deleted_total}
+
+@api_router.get("/admin/activity-log")
+async def get_activity_log(request: Request, limit: int = 50):
+    """Get recent activity log"""
+    await verify_admin(request)
+    
+    logs = await db.activity_log.find({}, {"_id": 0}).sort("timestamp", -1).limit(limit).to_list(limit)
+    return {"logs": logs}
+
+@api_router.get("/admin/discount-codes")
+async def get_discount_codes(request: Request):
+    """Get all discount codes and their usage"""
+    await verify_admin(request)
+    
+    codes = await db.discount_codes.find({}, {"_id": 0}).to_list(1000)
+    
+    # Get usage stats for each code
+    for code in codes:
+        code_name = code.get('code', '')
+        usage_count = await db.orders.count_documents({"discount_code": code_name})
+        code["usage_count"] = usage_count
+    
+    return {"codes": codes}
+
+@api_router.post("/admin/discount-codes")
+async def create_discount_code(request: Request, code: str, discount_percent: int, max_uses: int = 0, expires_at: str = ""):
+    """Create a new discount code"""
+    await verify_admin(request)
+    
+    new_code = {
+        "code": code.upper(),
+        "discount_percent": discount_percent,
+        "max_uses": max_uses,
+        "expires_at": expires_at,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "active": True
+    }
+    
+    await db.discount_codes.insert_one(new_code)
+    
+    await db.activity_log.insert_one({
+        "action": "discount_code_created",
+        "code": code.upper(),
+        "discount_percent": discount_percent,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"success": True, "code": new_code}
+
+@api_router.get("/admin/email-logs")
+async def get_email_logs(request: Request, status: str = "", limit: int = 100):
+    """Get email delivery logs"""
+    await verify_admin(request)
+    
+    query = {}
+    if status:
+        query["status"] = status
+    
+    logs = await db.email_logs.find(query, {"_id": 0}).sort("sent_at", -1).limit(limit).to_list(limit)
+    
+    # Get summary stats
+    total_sent = await db.email_logs.count_documents({})
+    total_delivered = await db.email_logs.count_documents({"status": "delivered"})
+    total_bounced = await db.email_logs.count_documents({"status": "bounced"})
+    total_failed = await db.email_logs.count_documents({"status": "failed"})
+    
+    return {
+        "logs": logs,
+        "summary": {
+            "total_sent": total_sent,
+            "delivered": total_delivered,
+            "bounced": total_bounced,
+            "failed": total_failed
+        }
+    }
+
+@api_router.get("/admin/duplicates")
+async def find_duplicates(request: Request):
+    """Find duplicate email entries across collections"""
+    await verify_admin(request)
+    
+    # Get all emails from all sources
+    all_emails = {}
+    
+    users = await db.users.find({}, {"email": 1, "_id": 0}).to_list(10000)
+    for u in users:
+        email = u.get('email', '').lower()
+        if email:
+            if email not in all_emails:
+                all_emails[email] = {"user": 0, "subscription": 0, "waitlist": 0}
+            all_emails[email]["user"] += 1
+    
+    subs = await db.email_subscriptions.find({}, {"email": 1, "_id": 0}).to_list(10000)
+    for s in subs:
+        email = s.get('email', '').lower()
+        if email:
+            if email not in all_emails:
+                all_emails[email] = {"user": 0, "subscription": 0, "waitlist": 0}
+            all_emails[email]["subscription"] += 1
+    
+    waitlist = await db.waitlist.find({}, {"email": 1, "_id": 0}).to_list(10000)
+    for w in waitlist:
+        email = w.get('email', '').lower()
+        if email:
+            if email not in all_emails:
+                all_emails[email] = {"user": 0, "subscription": 0, "waitlist": 0}
+            all_emails[email]["waitlist"] += 1
+    
+    # Find duplicates (more than 1 entry in any collection or entries in multiple collections)
+    duplicates = []
+    for email, counts in all_emails.items():
+        total = counts["user"] + counts["subscription"] + counts["waitlist"]
+        if counts["user"] > 1 or counts["subscription"] > 1 or counts["waitlist"] > 1:
+            duplicates.append({"email": email, "counts": counts, "reason": "multiple_entries"})
+    
+    return {"duplicates": duplicates, "total": len(duplicates)}
+
+@api_router.post("/admin/merge-duplicates")
+async def merge_duplicates(request: Request, email: str):
+    """Merge duplicate entries for an email (keeps one of each type)"""
+    await verify_admin(request)
+    
+    email_lower = email.lower()
+    
+    # For subscriptions, keep only the first one of each source
+    subs = await db.email_subscriptions.find({"email": {"$regex": f"^{email_lower}$", "$options": "i"}}).to_list(100)
+    seen_sources = set()
+    to_delete = []
+    for sub in subs:
+        source = sub.get('source', '')
+        if source in seen_sources:
+            to_delete.append(sub['_id'])
+        else:
+            seen_sources.add(source)
+    
+    for id in to_delete:
+        await db.email_subscriptions.delete_one({"_id": id})
+    
+    # For waitlist, keep only one entry per product
+    waitlist = await db.waitlist.find({"email": {"$regex": f"^{email_lower}$", "$options": "i"}}).to_list(100)
+    seen_products = set()
+    to_delete = []
+    for w in waitlist:
+        product = w.get('product_name', '')
+        if product in seen_products:
+            to_delete.append(w['_id'])
+        else:
+            seen_products.add(product)
+    
+    for id in to_delete:
+        await db.waitlist.delete_one({"_id": id})
+    
+    await db.activity_log.insert_one({
+        "action": "duplicates_merged",
+        "email": email,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"success": True, "message": f"Merged duplicates for {email}"}
+
+@api_router.post("/admin/user/{email}/notes")
+async def add_user_note(request: Request, email: str, note: str):
+    """Add a note to a user's profile"""
+    await verify_admin(request)
+    
+    new_note = {
+        "email": email.lower(),
+        "note": note,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.user_notes.insert_one(new_note)
+    
+    return {"success": True, "note": new_note}
+
+@api_router.get("/admin/user/{email}/notes")
+async def get_user_notes(request: Request, email: str):
+    """Get all notes for a user"""
+    await verify_admin(request)
+    
+    notes = await db.user_notes.find(
+        {"email": {"$regex": f"^{email.lower()}$", "$options": "i"}},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return {"notes": notes}
+
+@api_router.post("/admin/resend-email/{email}")
+async def resend_welcome_email(request: Request, email: str, email_type: str = "welcome"):
+    """Resend a welcome or other email to a user"""
+    await verify_admin(request)
+    
+    # Get user info
+    user = await db.users.find_one({"email": {"$regex": f"^{email.lower()}$", "$options": "i"}}, {"_id": 0, "password_hash": 0})
+    
+    if not user:
+        return {"success": False, "message": "User not found"}
+    
+    # Trigger n8n webhook for email
+    try:
+        webhook_data = {
+            "email": email,
+            "name": user.get('name', ''),
+            "email_type": email_type,
+            "resend": True
+        }
+        
+        async with httpx.AsyncClient() as client:
+            await client.post(N8N_WEBHOOK_URL, json=webhook_data, timeout=10)
+        
+        # Log the resend
+        await db.email_logs.insert_one({
+            "recipient": email,
+            "email_type": email_type,
+            "status": "sent",
+            "resend": True,
+            "sent_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        await db.activity_log.insert_one({
+            "action": "email_resent",
+            "email": email,
+            "email_type": email_type,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {"success": True, "message": f"Email resent to {email}"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+# ============== END NEW ADMIN FEATURES ==============
+
 @api_router.post("/admin/send-bulk-email")
 async def send_bulk_email(request: Request, email_request: BulkEmailRequest):
     """Send bulk email request to n8n webhook"""
