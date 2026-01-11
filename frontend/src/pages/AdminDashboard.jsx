@@ -412,6 +412,9 @@ const AdminDashboard = () => {
       case 'users':
         loadUsers();
         break;
+      case 'contacts':
+        loadAllContacts();
+        break;
       case 'subscribers':
         loadSubscribers();
         break;
