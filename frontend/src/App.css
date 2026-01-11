@@ -1415,14 +1415,16 @@ body {
   height: 100%;
   object-fit: contain;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: none;
+  /* Remove the baked-in glow from images by desaturating */
+  filter: saturate(0.3) brightness(0.9);
   position: relative;
   z-index: 2;
 }
 
 .product-card:hover .product-image {
   transform: scale(1.05);
-  filter: drop-shadow(0 0 25px rgba(0, 217, 255, 0.5)) drop-shadow(0 0 50px rgba(0, 217, 255, 0.3));
+  /* Restore full color and add glow effect on hover */
+  filter: saturate(1) brightness(1) drop-shadow(0 0 25px rgba(0, 217, 255, 0.5)) drop-shadow(0 0 50px rgba(0, 217, 255, 0.3));
 }
 
 .product-placeholder {
