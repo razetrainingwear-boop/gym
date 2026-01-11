@@ -498,21 +498,39 @@ const AdminDashboard = () => {
         {/* Overview Tab */}
         {activeTab === 'overview' && stats && (
           <div className="admin-overview">
+            {/* Time Frame Selector */}
+            <div className="timeframe-selector">
+              <Calendar size={18} />
+              <span>Time Period:</span>
+              <div className="timeframe-buttons">
+                {timeframeOptions.map(option => (
+                  <button
+                    key={option.value}
+                    className={`timeframe-btn ${timeframe === option.value ? 'active' : ''}`}
+                    onClick={() => handleTimeframeChange(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Main Stats Grid */}
             <div className="stats-grid">
-              <div className="stat-card">
+              <div className="stat-card signups">
                 <Users className="stat-icon" />
                 <div className="stat-info">
                   <h3>{stats.total_users}</h3>
-                  <p>Total Users</p>
+                  <p>Total Signups</p>
                   <span className="stat-sub">+{stats.recent_users_7d} this week</span>
                 </div>
               </div>
-              <div className="stat-card">
-                <Mail className="stat-icon" />
+              <div className="stat-card waitlist">
+                <Clock className="stat-icon" />
                 <div className="stat-info">
-                  <h3>{stats.total_subscribers}</h3>
-                  <p>Email Subscribers</p>
-                  <span className="stat-sub">+{stats.recent_subscribers_7d} this week</span>
+                  <h3>{stats.total_waitlist}</h3>
+                  <p>Waitlist Entries</p>
+                  <span className="stat-sub">+{stats.recent_waitlist_7d || 0} this week</span>
                 </div>
               </div>
               <div className="stat-card giveaway">
@@ -523,15 +541,15 @@ const AdminDashboard = () => {
                   <span className="stat-sub">+{stats.recent_giveaway_7d || 0} this week</span>
                 </div>
               </div>
-              <div className="stat-card">
-                <Clock className="stat-icon" />
+              <div className="stat-card subscribers">
+                <Mail className="stat-icon" />
                 <div className="stat-info">
-                  <h3>{stats.total_waitlist}</h3>
-                  <p>Waitlist Entries</p>
-                  <span className="stat-sub">+{stats.recent_waitlist_7d || 0} this week</span>
+                  <h3>{stats.total_subscribers}</h3>
+                  <p>Email Subscribers</p>
+                  <span className="stat-sub">+{stats.recent_subscribers_7d} this week</span>
                 </div>
               </div>
-              <div className="stat-card">
+              <div className="stat-card orders">
                 <ShoppingBag className="stat-icon" />
                 <div className="stat-info">
                   <h3>{stats.total_orders}</h3>
@@ -539,7 +557,116 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
-            <button onClick={loadStats} className="refresh-btn">
+
+            {/* Breakdown Section */}
+            <div className="breakdown-section">
+              <h3><Target size={20} /> Breakdown by Discipline</h3>
+              
+              <div className="breakdown-grid">
+                {/* Signups Breakdown */}
+                <div className="breakdown-card">
+                  <h4>Signups by Type</h4>
+                  <div className="breakdown-items">
+                    <div className="breakdown-item mag">
+                      <span className="breakdown-label">MAG (Men's)</span>
+                      <span className="breakdown-value">{stats.mag_users || 0}</span>
+                      <div className="breakdown-bar">
+                        <div 
+                          className="breakdown-fill mag" 
+                          style={{ width: `${stats.total_users > 0 ? ((stats.mag_users || 0) / stats.total_users * 100) : 0}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="breakdown-item wag">
+                      <span className="breakdown-label">WAG (Women's)</span>
+                      <span className="breakdown-value">{stats.wag_users || 0}</span>
+                      <div className="breakdown-bar">
+                        <div 
+                          className="breakdown-fill wag" 
+                          style={{ width: `${stats.total_users > 0 ? ((stats.wag_users || 0) / stats.total_users * 100) : 0}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="breakdown-item other">
+                      <span className="breakdown-label">Others</span>
+                      <span className="breakdown-value">{stats.other_users || 0}</span>
+                      <div className="breakdown-bar">
+                        <div 
+                          className="breakdown-fill other" 
+                          style={{ width: `${stats.total_users > 0 ? ((stats.other_users || 0) / stats.total_users * 100) : 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="breakdown-total">
+                    <span>Total</span>
+                    <span>{stats.total_users}</span>
+                  </div>
+                </div>
+
+                {/* Waitlist Breakdown */}
+                <div className="breakdown-card">
+                  <h4>Waitlist by Type</h4>
+                  <div className="breakdown-items">
+                    <div className="breakdown-item mag">
+                      <span className="breakdown-label">MAG (Men's)</span>
+                      <span className="breakdown-value">{stats.mag_waitlist || 0}</span>
+                      <div className="breakdown-bar">
+                        <div 
+                          className="breakdown-fill mag" 
+                          style={{ width: `${stats.total_waitlist > 0 ? ((stats.mag_waitlist || 0) / stats.total_waitlist * 100) : 0}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="breakdown-item wag">
+                      <span className="breakdown-label">WAG (Women's)</span>
+                      <span className="breakdown-value">{stats.wag_waitlist || 0}</span>
+                      <div className="breakdown-bar">
+                        <div 
+                          className="breakdown-fill wag" 
+                          style={{ width: `${stats.total_waitlist > 0 ? ((stats.wag_waitlist || 0) / stats.total_waitlist * 100) : 0}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="breakdown-item other">
+                      <span className="breakdown-label">Others</span>
+                      <span className="breakdown-value">{stats.other_waitlist || 0}</span>
+                      <div className="breakdown-bar">
+                        <div 
+                          className="breakdown-fill other" 
+                          style={{ width: `${stats.total_waitlist > 0 ? ((stats.other_waitlist || 0) / stats.total_waitlist * 100) : 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="breakdown-total">
+                    <span>Total</span>
+                    <span>{stats.total_waitlist}</span>
+                  </div>
+                </div>
+
+                {/* Summary Card */}
+                <div className="breakdown-card summary">
+                  <h4>Quick Summary</h4>
+                  <div className="summary-stats">
+                    <div className="summary-item">
+                      <span className="summary-label">Giveaway Entries</span>
+                      <span className="summary-value giveaway">{stats.total_giveaway || 0}</span>
+                    </div>
+                    <div className="summary-item">
+                      <span className="summary-label">Email Subscribers</span>
+                      <span className="summary-value subscribers">{stats.total_subscribers}</span>
+                    </div>
+                    <div className="summary-item">
+                      <span className="summary-label">Orders</span>
+                      <span className="summary-value orders">{stats.total_orders}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={() => loadStats()} className="refresh-btn">
               <RefreshCw size={16} /> Refresh Stats
             </button>
           </div>
