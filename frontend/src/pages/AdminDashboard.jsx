@@ -1150,11 +1150,17 @@ const AdminDashboard = () => {
                     <th>Orders</th>
                     <th>Cart</th>
                     <th>Date</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {allContacts.map((contact, i) => (
-                    <tr key={i}>
+                    <tr key={i} className={selectedContacts.includes(contact.email) ? 'selected' : ''}>
+                      <td>
+                        <button onClick={() => toggleContactSelection(contact.email)} className="select-btn">
+                          {selectedContacts.includes(contact.email) ? <CheckSquare size={16} /> : <Square size={16} />}
+                        </button>
+                      </td>
                       <td className="email-cell">{contact.email}</td>
                       <td>{contact.name || '-'}</td>
                       <td>
