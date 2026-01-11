@@ -1,0 +1,12 @@
+# RAZE Training - Robots.txt
+User-agent: *
+Allow: /
+
+# Disallow admin and private routes
+Disallow: /admin
+Disallow: /api/
+Disallow: /checkout/success
+Disallow: /checkout/cancel
+
+# Sitemap location
+Sitemap: https://razetraining.com/sitemap.xml

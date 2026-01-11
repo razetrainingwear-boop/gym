@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Homepage -->
+  <url>
+    <loc>https://razetraining.com/</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://razetraining.com/images/logo/raze_logo.png</image:loc>
+      <image:title>RAZE Training Logo</image:title>
+    </image:image>
+  </url>
+  
+  <!-- Products Page -->
+  <url>
+    <loc>https://razetraining.com/products</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://razetraining.com/images/products/front_shirt_black_cyan.png</image:loc>
+      <image:title>RAZE Performance T-Shirt Black/Cyan</image:title>
+    </image:image>
+  </url>
+  
+  <!-- Individual Product Pages -->
+  <url>
+    <loc>https://razetraining.com/product/1</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://razetraining.com/images/products/front_shirt_black_cyan.png</image:loc>
+      <image:title>Performance T-Shirt - Black/Cyan</image:title>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://razetraining.com/product/2</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://razetraining.com/images/products/front_shirt_black_silver.png</image:loc>
+      <image:title>Performance T-Shirt - Black/Silver</image:title>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://razetraining.com/product/3</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://razetraining.com/images/products/front_shirt_grey_cyan.png</image:loc>
+      <image:title>Performance T-Shirt - Grey/Cyan</image:title>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://razetraining.com/product/4</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://razetraining.com/images/products/front_shirt_grey_white.png</image:loc>
+      <image:title>Performance T-Shirt - Grey/White</image:title>
+    </image:image>
+  </url>
+  
+  <!-- About Page -->
+  <url>
+    <loc>https://razetraining.com/about</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Cart Page -->
+  <url>
+    <loc>https://razetraining.com/cart</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Checkout Page -->
+  <url>
+    <loc>https://razetraining.com/checkout</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+</urlset>
