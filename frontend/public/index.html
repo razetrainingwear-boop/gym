@@ -4,31 +4,99 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <meta name="theme-color" content="#0a0a0a" />
-    <meta name="description" content="RAZE - Minimalist performance training wear engineered for gymnastics. Built by Discipline." />
+    <meta name="theme-color" content="#00d9ff" />
     
-    <!-- Preload critical hero images (local files) -->
-    <link 
-      rel="preload" 
-      as="image" 
-      href="%PUBLIC_URL%/images/products/front_shirt_black_cyan.png"
-      fetchpriority="high"
-    />
-    <link 
-      rel="preload" 
-      as="image" 
-      href="%PUBLIC_URL%/images/products/back_shirt_black_cyan.png"
-      fetchpriority="high"
-    />
+    <!-- Primary SEO Meta Tags -->
+    <title>RAZE Training - Performance Gear for Gymnasts | Built by Discipline</title>
+    <meta name="title" content="RAZE Training - Performance Gear for Gymnasts | Built by Discipline" />
+    <meta name="description" content="Premium athletic wear designed by gymnasts, for gymnasts. Engineered for peak performance in MAG & WAG training. Shop the collection." />
+    <meta name="keywords" content="gymnastics apparel, MAG training wear, WAG athletic gear, gymnast t-shirts, performance training, gymnastics clothing, athletic wear" />
+    <meta name="author" content="RAZE Training" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://razetraining.com/" />
     
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://razetraining.com/" />
+    <meta property="og:title" content="RAZE Training - Performance Gear for Gymnasts" />
+    <meta property="og:description" content="Premium athletic wear designed by gymnasts, for gymnasts. Engineered for peak performance. Built by Discipline." />
+    <meta property="og:image" content="https://razetraining.com/images/products/front_shirt_black_cyan.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="RAZE Training" />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://razetraining.com/" />
+    <meta name="twitter:title" content="RAZE Training - Performance Gear for Gymnasts" />
+    <meta name="twitter:description" content="Premium athletic wear designed by gymnasts, for gymnasts. Built by Discipline." />
+    <meta name="twitter:image" content="https://razetraining.com/images/products/front_shirt_black_cyan.png" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="RAZE Training" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="RAZE" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="msapplication-TileColor" content="#0a0a0a" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    
+    <!-- Preload critical hero images -->
+    <link rel="preload" as="image" href="%PUBLIC_URL%/images/products/front_shirt_black_cyan.png" fetchpriority="high" />
+    <link rel="preload" as="image" href="%PUBLIC_URL%/images/logo/raze_logo.png" fetchpriority="high" />
+    
+    <!-- PWA Icons -->
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     
-    <title>RAZE - Built by Discipline</title>
+    <!-- Structured Data - Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "RAZE Training",
+      "description": "Premium athletic wear designed by gymnasts, for gymnasts",
+      "url": "https://razetraining.com",
+      "logo": "https://razetraining.com/images/logo/raze_logo.png",
+      "sameAs": [
+        "https://instagram.com/razetraining",
+        "https://tiktok.com/@razetraining"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "support@razetraining.com",
+        "contactType": "customer service"
+      }
+    }
+    </script>
+    
+    <!-- Structured Data - Product -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": "RAZE Performance T-Shirt",
+      "image": "https://razetraining.com/images/products/front_shirt_black_cyan.png",
+      "description": "Premium performance t-shirt engineered for gymnastics training. Moisture-wicking, breathable fabric.",
+      "brand": {
+        "@type": "Brand",
+        "name": "RAZE Training"
+      },
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "USD",
+        "price": "45.00",
+        "availability": "https://schema.org/PreOrder"
+      }
+    }
+    </script>
     
     <!-- Critical CSS for above-fold content -->
     <style>
-      /* Inline critical styles for faster FCP */
       html {
         -webkit-text-size-adjust: 100%;
         -ms-text-size-adjust: 100%;
@@ -56,27 +124,61 @@
         overflow-x: hidden;
         max-width: 100vw;
       }
-      /* Prevent layout shift for hero */
       .hero-section {
         min-height: 100vh;
         overflow-x: hidden;
       }
-      /* Image loading states */
-      img.loading {
-        opacity: 0.8;
+      /* Lazy loading placeholder */
+      img[loading="lazy"] {
+        opacity: 0;
+        transition: opacity 0.3s ease-in;
       }
-      img.loaded {
+      img[loading="lazy"].loaded,
+      img:not([loading="lazy"]) {
         opacity: 1;
-        transition: opacity 0.2s ease;
       }
       /* Prevent zoom on input focus (iOS) */
       input, select, textarea {
         font-size: 16px !important;
       }
+      /* PWA Install banner styling */
+      .pwa-install-banner {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+        border-top: 1px solid rgba(0, 217, 255, 0.3);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 9999;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+      }
+      .pwa-install-banner.show {
+        transform: translateY(0);
+      }
     </style>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>You need to enable JavaScript to run RAZE Training. Please enable JavaScript in your browser settings.</noscript>
     <div id="root"></div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(function(registration) {
+              console.log('RAZE PWA: Service Worker registered with scope:', registration.scope);
+            })
+            .catch(function(error) {
+              console.log('RAZE PWA: Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
