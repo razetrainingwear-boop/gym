@@ -160,10 +160,10 @@ const AdminDashboard = () => {
     return token ? { 'X-Admin-Token': token } : {};
   };
 
-  const loadStats = async () => {
+  const loadStats = async (tf = timeframe) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/admin/stats`, {
+      const res = await fetch(`${API_URL}/api/admin/stats?timeframe=${tf}`, {
         credentials: 'include',
         headers: getAuthHeaders()
       });
@@ -173,6 +173,12 @@ const AdminDashboard = () => {
       console.error('Failed to load stats:', error);
     }
     setLoading(false);
+  };
+
+  // Handle timeframe change
+  const handleTimeframeChange = (newTimeframe) => {
+    setTimeframe(newTimeframe);
+    loadStats(newTimeframe);
   };
 
   const loadUsers = async () => {
