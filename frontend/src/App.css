@@ -12565,7 +12565,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(ellipse at center, transparent 50%, rgba(10, 10, 10, 0.85) 100%);
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(10, 10, 10, 0.95) 85%, rgba(10, 10, 10, 1) 100%);
   pointer-events: none;
   z-index: 1;
 }
