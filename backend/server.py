@@ -3026,31 +3026,101 @@ async def verify_admin_session(request: Request):
         return {"authenticated": False}
 
 @api_router.get("/admin/stats")
-async def get_admin_stats(request: Request):
-    """Get admin dashboard statistics"""
+async def get_admin_stats(request: Request, timeframe: str = "all"):
+    """Get admin dashboard statistics with optional time filtering
+    
+    Args:
+        timeframe: "today", "7d", "30d", "90d", or "all"
+    """
     await verify_admin(request)
     
-    total_users = await db.users.count_documents({})
-    total_subscribers = await db.email_subscriptions.count_documents({})
-    total_orders = await db.orders.count_documents({})
-    total_waitlist = await db.waitlist.count_documents({})
+    # Calculate date filter based on timeframe
+    date_filter = {}
+    now = datetime.now(timezone.utc)
     
-    # Get giveaway entries count (subscribers from giveaway popup)
-    total_giveaway = await db.email_subscriptions.count_documents({"source": "giveaway_popup"})
+    if timeframe == "today":
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        date_filter = {"$gte": start_date.isoformat()}
+    elif timeframe == "7d":
+        start_date = now - timedelta(days=7)
+        date_filter = {"$gte": start_date.isoformat()}
+    elif timeframe == "30d":
+        start_date = now - timedelta(days=30)
+        date_filter = {"$gte": start_date.isoformat()}
+    elif timeframe == "90d":
+        start_date = now - timedelta(days=90)
+        date_filter = {"$gte": start_date.isoformat()}
+    # "all" = no filter
     
-    # Get recent signups (last 7 days)
-    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    # Build queries with date filter
+    user_query = {"created_at": date_filter} if date_filter else {}
+    subscriber_query = {"timestamp": date_filter} if date_filter else {}
+    waitlist_query = {"created_at": date_filter} if date_filter else {}
+    order_query = {"created_at": date_filter} if date_filter else {}
+    
+    # Total counts (filtered by timeframe)
+    total_users = await db.users.count_documents(user_query)
+    total_subscribers = await db.email_subscriptions.count_documents(subscriber_query)
+    total_orders = await db.orders.count_documents(order_query)
+    total_waitlist = await db.waitlist.count_documents(waitlist_query)
+    
+    # Giveaway entries (filtered)
+    giveaway_query = {"source": "giveaway_popup"}
+    if date_filter:
+        giveaway_query["timestamp"] = date_filter
+    total_giveaway = await db.email_subscriptions.count_documents(giveaway_query)
+    
+    # User type breakdown (MAG, WAG, Others)
+    mag_query = {"discipline": "MAG"}
+    wag_query = {"discipline": "WAG"}
+    other_query = {"$or": [{"discipline": {"$exists": False}}, {"discipline": {"$nin": ["MAG", "WAG"]}}]}
+    
+    if date_filter:
+        mag_query["created_at"] = date_filter
+        wag_query["created_at"] = date_filter
+        other_query["created_at"] = date_filter
+    
+    mag_users = await db.users.count_documents(mag_query)
+    wag_users = await db.users.count_documents(wag_query)
+    other_users = total_users - mag_users - wag_users
+    
+    # Waitlist breakdown by discipline
+    mag_waitlist_query = {"discipline": "MAG"}
+    wag_waitlist_query = {"discipline": "WAG"}
+    other_waitlist_query = {"$or": [{"discipline": {"$exists": False}}, {"discipline": {"$nin": ["MAG", "WAG"]}}]}
+    
+    if date_filter:
+        mag_waitlist_query["created_at"] = date_filter
+        wag_waitlist_query["created_at"] = date_filter
+        other_waitlist_query["created_at"] = date_filter
+    
+    mag_waitlist = await db.waitlist.count_documents(mag_waitlist_query)
+    wag_waitlist = await db.waitlist.count_documents(wag_waitlist_query)
+    other_waitlist = total_waitlist - mag_waitlist - wag_waitlist
+    
+    # Get recent signups (last 7 days) - always relative to now
+    week_ago = (now - timedelta(days=7)).isoformat()
     recent_users = await db.users.count_documents({"created_at": {"$gte": week_ago}})
     recent_subscribers = await db.email_subscriptions.count_documents({"timestamp": {"$gte": week_ago}})
     recent_giveaway = await db.email_subscriptions.count_documents({"source": "giveaway_popup", "timestamp": {"$gte": week_ago}})
     recent_waitlist = await db.waitlist.count_documents({"created_at": {"$gte": week_ago}})
     
     return {
+        "timeframe": timeframe,
         "total_users": total_users,
         "total_subscribers": total_subscribers,
         "total_orders": total_orders,
         "total_waitlist": total_waitlist,
         "total_giveaway": total_giveaway,
+        # User breakdown by discipline
+        "mag_users": mag_users,
+        "wag_users": wag_users,
+        "other_users": other_users,
+        # Waitlist breakdown by discipline
+        "mag_waitlist": mag_waitlist,
+        "wag_waitlist": wag_waitlist,
+        "other_waitlist": other_waitlist,
+        # Recent stats (always last 7 days)
         "recent_users_7d": recent_users,
         "recent_subscribers_7d": recent_subscribers,
         "recent_giveaway_7d": recent_giveaway,
