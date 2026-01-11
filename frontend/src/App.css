@@ -12576,6 +12576,14 @@ body {
   object-fit: contain;
   position: relative;
   z-index: 0;
+  /* Remove glow by default - desaturate and reduce brightness */
+  filter: saturate(0.3) brightness(0.85);
+  transition: filter 0.3s ease;
+}
+
+/* Show full glow on hover */
+.product-card-shop:hover .product-image-shop {
+  filter: saturate(1) brightness(1);
 }
 
 .product-placeholder-shop {
