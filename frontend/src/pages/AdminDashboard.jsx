@@ -1731,6 +1731,262 @@ const AdminDashboard = () => {
             )}
           </div>
         )}
+
+        {/* Inventory Tab */}
+        {activeTab === 'inventory' && (
+          <div className="admin-table-container">
+            <div className="table-header">
+              <h2>Inventory Management</h2>
+              <button onClick={loadInventory} className="refresh-btn">
+                <RefreshCw size={16} /> Refresh
+              </button>
+            </div>
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Color</th>
+                  <th>Size</th>
+                  <th>Quantity</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inventory.map((item, i) => (
+                  <tr key={i} className={item.quantity <= (item.low_stock_threshold || 5) ? 'low-stock' : ''}>
+                    <td>{item.product_name}</td>
+                    <td>{item.color}</td>
+                    <td>{item.size}</td>
+                    <td>
+                      <input 
+                        type="number" 
+                        value={item.quantity} 
+                        onChange={(e) => updateInventory(item.product_id, item.size, parseInt(e.target.value))}
+                        className="inventory-input"
+                        min="0"
+                      />
+                    </td>
+                    <td>
+                      {item.quantity <= (item.low_stock_threshold || 5) && (
+                        <span className="low-stock-badge">Low Stock!</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Activity Log Tab */}
+        {activeTab === 'activity' && (
+          <div className="admin-table-container">
+            <div className="table-header">
+              <h2>Activity Log</h2>
+              <button onClick={loadActivityLog} className="refresh-btn">
+                <RefreshCw size={16} /> Refresh
+              </button>
+            </div>
+            <div className="activity-log-list">
+              {activityLog.map((log, i) => (
+                <div key={i} className="activity-item">
+                  <span className={`activity-badge ${log.action}`}>{log.action}</span>
+                  <span className="activity-details">
+                    {log.email && <strong>{log.email}</strong>}
+                    {log.winner_email && <strong>Winner: {log.winner_email}</strong>}
+                    {log.product_id && <span>Product #{log.product_id}</span>}
+                  </span>
+                  <span className="activity-time">{new Date(log.timestamp).toLocaleString()}</span>
+                </div>
+              ))}
+              {activityLog.length === 0 && <p className="empty-message">No activity recorded yet</p>}
+            </div>
+          </div>
+        )}
+
+        {/* Discount Codes Tab */}
+        {activeTab === 'discounts' && (
+          <div className="admin-table-container">
+            <div className="table-header">
+              <h2>Discount Codes</h2>
+              <button onClick={loadDiscountCodes} className="refresh-btn">
+                <RefreshCw size={16} /> Refresh
+              </button>
+            </div>
+            
+            <div className="create-discount-form">
+              <h4>Create New Code</h4>
+              <div className="form-row">
+                <input 
+                  type="text" 
+                  placeholder="CODE" 
+                  value={newDiscountCode.code}
+                  onChange={(e) => setNewDiscountCode({...newDiscountCode, code: e.target.value.toUpperCase()})}
+                />
+                <input 
+                  type="number" 
+                  placeholder="% Off" 
+                  value={newDiscountCode.discount_percent}
+                  onChange={(e) => setNewDiscountCode({...newDiscountCode, discount_percent: parseInt(e.target.value)})}
+                  min="1" max="100"
+                />
+                <input 
+                  type="number" 
+                  placeholder="Max Uses (0=unlimited)" 
+                  value={newDiscountCode.max_uses}
+                  onChange={(e) => setNewDiscountCode({...newDiscountCode, max_uses: parseInt(e.target.value)})}
+                  min="0"
+                />
+                <button onClick={createDiscountCode} className="action-btn">Create</button>
+              </div>
+            </div>
+            
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Discount</th>
+                  <th>Max Uses</th>
+                  <th>Times Used</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {discountCodes.map((code, i) => (
+                  <tr key={i}>
+                    <td><strong>{code.code}</strong></td>
+                    <td>{code.discount_percent}%</td>
+                    <td>{code.max_uses || 'Unlimited'}</td>
+                    <td>{code.usage_count || 0}</td>
+                    <td>
+                      <span className={`status-badge ${code.active ? 'active' : 'inactive'}`}>
+                        {code.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td>{new Date(code.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+                {discountCodes.length === 0 && (
+                  <tr><td colSpan="6" className="empty-row">No discount codes yet</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Email Logs Tab */}
+        {activeTab === 'email-logs' && (
+          <div className="admin-table-container">
+            <div className="table-header">
+              <h2>Email Delivery Status</h2>
+              <button onClick={loadEmailLogs} className="refresh-btn">
+                <RefreshCw size={16} /> Refresh
+              </button>
+            </div>
+            
+            {emailLogsSummary && (
+              <div className="email-summary">
+                <div className="summary-card">
+                  <span className="summary-number">{emailLogsSummary.total_sent}</span>
+                  <span className="summary-label">Total Sent</span>
+                </div>
+                <div className="summary-card delivered">
+                  <span className="summary-number">{emailLogsSummary.delivered}</span>
+                  <span className="summary-label">Delivered</span>
+                </div>
+                <div className="summary-card bounced">
+                  <span className="summary-number">{emailLogsSummary.bounced}</span>
+                  <span className="summary-label">Bounced</span>
+                </div>
+                <div className="summary-card failed">
+                  <span className="summary-number">{emailLogsSummary.failed}</span>
+                  <span className="summary-label">Failed</span>
+                </div>
+              </div>
+            )}
+            
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Recipient</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Sent At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {emailLogs.map((log, i) => (
+                  <tr key={i}>
+                    <td>{log.recipient}</td>
+                    <td>{log.email_type}</td>
+                    <td>
+                      <span className={`status-badge ${log.status}`}>{log.status}</span>
+                    </td>
+                    <td>{new Date(log.sent_at).toLocaleString()}</td>
+                    <td>
+                      {(log.status === 'bounced' || log.status === 'failed') && (
+                        <button onClick={() => resendEmail(log.recipient, log.email_type)} className="action-btn-sm resend">
+                          <RotateCcw size={14} /> Retry
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {emailLogs.length === 0 && (
+                  <tr><td colSpan="5" className="empty-row">No email logs yet</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Duplicates Tab */}
+        {activeTab === 'duplicates' && (
+          <div className="admin-table-container">
+            <div className="table-header">
+              <h2>Duplicate Detection ({duplicates.length})</h2>
+              <button onClick={loadDuplicates} className="refresh-btn">
+                <RefreshCw size={16} /> Refresh
+              </button>
+            </div>
+            
+            {duplicates.length === 0 ? (
+              <div className="no-duplicates">
+                <Check size={48} />
+                <p>No duplicates found! Your data is clean.</p>
+              </div>
+            ) : (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>User Entries</th>
+                    <th>Subscription Entries</th>
+                    <th>Waitlist Entries</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {duplicates.map((dup, i) => (
+                    <tr key={i}>
+                      <td>{dup.email}</td>
+                      <td>{dup.counts.user}</td>
+                      <td>{dup.counts.subscription}</td>
+                      <td>{dup.counts.waitlist}</td>
+                      <td>
+                        <button onClick={() => mergeDuplicates(dup.email)} className="action-btn merge">
+                          <Copy size={14} /> Merge
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
