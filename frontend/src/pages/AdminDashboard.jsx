@@ -79,33 +79,14 @@ const AdminDashboard = () => {
   }, [user]);
 
   const checkAuth = async () => {
-    // If user is logged in and is admin, auto-authenticate
+    // If user is logged in and is admin, auto-authenticate immediately
     if (user?.is_admin) {
       setIsAuthenticated(true);
       loadStats();
       return;
     }
     
-    // Fallback: Check localStorage admin token
-    const storedToken = localStorage.getItem('admin_token');
-    if (storedToken) {
-      try {
-        const res = await fetch(`${API_URL}/api/admin/verify`, {
-          
-          headers: { 'X-Admin-Token': storedToken }
-        });
-        const data = await res.json();
-        setIsAuthenticated(data.authenticated);
-        if (data.authenticated) {
-          loadStats();
-        } else {
-          localStorage.removeItem('admin_token');
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        localStorage.removeItem('admin_token');
-      }
-    }
+    // No fallback password auth needed - only admin users can access
   };
 
   const handleLogin = async (e) => {
