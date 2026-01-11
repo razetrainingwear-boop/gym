@@ -12557,7 +12557,7 @@ body {
   overflow: hidden;
 }
 
-/* Vignette overlay to mask white corners on product images */
+/* Dark overlay to completely hide glow by default */
 .product-image-wrapper-shop::after {
   content: '';
   position: absolute;
@@ -12565,7 +12565,8 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(ellipse at center, rgba(10, 10, 10, 0.5) 0%, rgba(10, 10, 10, 0.85) 60%, rgba(10, 10, 10, 1) 100%);
+  /* Solid dark gradient that masks the glow around the shirt */
+  background: radial-gradient(ellipse 70% 80% at center, transparent 25%, rgba(10, 10, 10, 0.9) 50%, rgba(10, 10, 10, 1) 70%);
   pointer-events: none;
   z-index: 1;
   transition: opacity 0.4s ease;
@@ -12583,14 +12584,14 @@ body {
   object-fit: contain;
   position: relative;
   z-index: 0;
-  /* Muted colors by default - remove the cyan glow */
-  filter: saturate(0.2) brightness(0.95) contrast(0.95);
+  /* Desaturate the cyan glow by default */
+  filter: saturate(0);
   transition: filter 0.4s ease;
 }
 
 /* Show full color and glow on hover */
 .product-card-shop:hover .product-image-shop {
-  filter: saturate(1) brightness(1) contrast(1);
+  filter: saturate(1);
 }
 
 .product-placeholder-shop {
