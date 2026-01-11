@@ -669,6 +669,140 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {/* All Contacts Tab */}
+        {activeTab === 'contacts' && (
+          <div className="admin-table-container">
+            <div className="table-header">
+              <h2>All Contacts ({allContacts.length})</h2>
+              <button onClick={loadAllContacts} className="refresh-btn">
+                <RefreshCw size={16} /> Refresh
+              </button>
+            </div>
+            
+            {/* Summary Cards */}
+            {contactsSummary && (
+              <div className="contacts-summary">
+                <div className="summary-card">
+                  <span className="summary-number">{contactsSummary.total_signed_up}</span>
+                  <span className="summary-label">Signed Up</span>
+                </div>
+                <div className="summary-card giveaway">
+                  <span className="summary-number">{contactsSummary.total_giveaway}</span>
+                  <span className="summary-label">Giveaway</span>
+                </div>
+                <div className="summary-card early">
+                  <span className="summary-number">{contactsSummary.total_early_access}</span>
+                  <span className="summary-label">Early Access</span>
+                </div>
+                <div className="summary-card waitlist">
+                  <span className="summary-number">{contactsSummary.total_with_waitlist}</span>
+                  <span className="summary-label">Waitlist</span>
+                </div>
+                <div className="summary-card orders">
+                  <span className="summary-number">{contactsSummary.total_with_orders}</span>
+                  <span className="summary-label">Has Orders</span>
+                </div>
+                <div className="summary-card cart">
+                  <span className="summary-number">{contactsSummary.total_with_cart}</span>
+                  <span className="summary-label">Has Cart</span>
+                </div>
+                <div className="summary-card mag">
+                  <span className="summary-number">{contactsSummary.mag_count}</span>
+                  <span className="summary-label">MAG</span>
+                </div>
+                <div className="summary-card wag">
+                  <span className="summary-number">{contactsSummary.wag_count}</span>
+                  <span className="summary-label">WAG</span>
+                </div>
+              </div>
+            )}
+
+            <div className="table-scroll">
+              <table className="admin-table enhanced">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Discipline</th>
+                    <th>Source</th>
+                    <th>Signed Up</th>
+                    <th>Giveaway</th>
+                    <th>Early Access</th>
+                    <th>Waitlist</th>
+                    <th>Orders</th>
+                    <th>Cart</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allContacts.map((contact, i) => (
+                    <tr key={i}>
+                      <td className="email-cell">{contact.email}</td>
+                      <td>{contact.name || '-'}</td>
+                      <td>
+                        <span className={`discipline-badge ${(contact.discipline || 'unknown').toLowerCase()}`}>
+                          {contact.discipline || 'Unknown'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`source-badge ${contact.signup_source}`}>
+                          {contact.signup_source}
+                        </span>
+                      </td>
+                      <td>
+                        {contact.signed_up ? (
+                          <span className="status-yes"><Check size={14} /></span>
+                        ) : (
+                          <span className="status-no"><X size={14} /></span>
+                        )}
+                      </td>
+                      <td>
+                        {contact.has_giveaway_entry ? (
+                          <span className="status-yes"><Check size={14} /></span>
+                        ) : (
+                          <span className="status-no"><X size={14} /></span>
+                        )}
+                      </td>
+                      <td>
+                        {contact.has_early_access ? (
+                          <span className="status-yes"><Check size={14} /></span>
+                        ) : (
+                          <span className="status-no"><X size={14} /></span>
+                        )}
+                      </td>
+                      <td>
+                        {contact.waitlist_products?.length > 0 ? (
+                          <span className="waitlist-badge" title={contact.waitlist_products.join(', ')}>
+                            {contact.waitlist_products.length} item{contact.waitlist_products.length > 1 ? 's' : ''}
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td>
+                        {contact.orders_count > 0 ? (
+                          <span className="orders-badge">
+                            {contact.orders_count} (${contact.total_spent?.toFixed(0) || 0})
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td>
+                        {contact.has_cart ? (
+                          <span className="status-yes"><Check size={14} /></span>
+                        ) : (
+                          <span className="status-no"><X size={14} /></span>
+                        )}
+                      </td>
+                      <td>{contact.signup_date ? new Date(contact.signup_date).toLocaleDateString() : '-'}</td>
+                    </tr>
+                  ))}
+                  {allContacts.length === 0 && (
+                    <tr><td colSpan="11" className="empty-row">No contacts found</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* Analytics Tab */}
         {activeTab === 'analytics' && analyticsData && (
           <div className="admin-analytics">
