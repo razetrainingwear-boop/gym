@@ -54,6 +54,8 @@ const AdminDashboard = () => {
   const [subscribers, setSubscribers] = useState([]);
   const [waitlist, setWaitlist] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [allContacts, setAllContacts] = useState([]);
+  const [contactsSummary, setContactsSummary] = useState(null);
   const [analyticsData, setAnalyticsData] = useState(null);
   
   // Email form state
