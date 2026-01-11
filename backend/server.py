@@ -828,6 +828,7 @@ async def get_public_stats():
     """
     Public stats endpoint - returns signup, waitlist, and giveaway counts.
     No authentication required.
+    Used by n8n Discord bot to update stats dashboard.
     """
     # Get today's date range
     today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -836,7 +837,7 @@ async def get_public_stats():
     # Total counts
     total_signups = await db.users.count_documents({})
     total_waitlist = await db.waitlist.count_documents({})
-    total_giveaway = await db.email_subscriptions.count_documents({"source": "giveaway_popup"})
+    total_giveaway_entries = await db.email_subscriptions.count_documents({"source": "giveaway_popup"})
     
     # Today's counts
     signups_today = await db.users.count_documents({"created_at": {"$gte": today_iso}})
@@ -849,10 +850,11 @@ async def get_public_stats():
     return {
         "total_signups": total_signups,
         "total_waitlist": total_waitlist,
-        "total_giveaway": total_giveaway,
+        "total_giveaway_entries": total_giveaway_entries,
         "signups_today": signups_today,
         "waitlist_today": waitlist_today,
-        "giveaway_today": giveaway_today
+        "giveaway_today": giveaway_today,
+        "updated_at": datetime.now(timezone.utc).isoformat()
     }
 
 
