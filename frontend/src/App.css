@@ -1415,8 +1415,8 @@ body {
   height: 100%;
   object-fit: contain;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  /* Remove the baked-in glow from images by desaturating */
-  filter: saturate(0.3) brightness(0.9);
+  /* Completely desaturate the baked-in glow from images */
+  filter: saturate(0) brightness(0.95);
   position: relative;
   z-index: 2;
 }
