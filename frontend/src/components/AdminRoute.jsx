@@ -6,8 +6,8 @@ const AdminRoute = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
   const location = useLocation();
 
-  // Allow access to /admin/dashboard - it has its own password authentication
-  if (location.pathname === '/admin/dashboard') {
+  // Allow access to /admin and /admin/dashboard - they have their own password authentication
+  if (location.pathname === '/admin' || location.pathname === '/admin/dashboard' || location.pathname.startsWith('/admin/')) {
     return children;
   }
 
