@@ -12565,15 +12565,16 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(ellipse at center, rgba(10, 10, 10, 0.3) 30%, rgba(10, 10, 10, 0.95) 75%, rgba(10, 10, 10, 1) 100%);
+  background: radial-gradient(ellipse at center, rgba(10, 10, 10, 0.5) 0%, rgba(10, 10, 10, 0.85) 60%, rgba(10, 10, 10, 1) 100%);
   pointer-events: none;
   z-index: 1;
-  transition: background 0.4s ease;
+  transition: opacity 0.4s ease;
+  opacity: 1;
 }
 
 /* Remove overlay on hover to reveal glow */
 .product-card-shop:hover .product-image-wrapper-shop::after {
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(10, 10, 10, 0.7) 85%, rgba(10, 10, 10, 0.9) 100%);
+  opacity: 0;
 }
 
 .product-image-shop {
@@ -12582,14 +12583,14 @@ body {
   object-fit: contain;
   position: relative;
   z-index: 0;
-  /* Muted colors by default */
-  filter: saturate(0.4) brightness(0.85);
+  /* Muted colors by default - remove the cyan glow */
+  filter: saturate(0.2) brightness(0.95) contrast(0.95);
   transition: filter 0.4s ease;
 }
 
 /* Show full color and glow on hover */
 .product-card-shop:hover .product-image-shop {
-  filter: saturate(1) brightness(1);
+  filter: saturate(1) brightness(1) contrast(1);
 }
 
 .product-placeholder-shop {
