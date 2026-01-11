@@ -66,6 +66,7 @@ const Home = () => {
 
   return (
     <div className="landing-page">
+      <PageSEO.home />
       <Header />
       <main className="landing-content">
         <Hero onEarlyAccessClick={handleEarlyAccessClick} />
