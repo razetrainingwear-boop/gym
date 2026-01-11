@@ -1134,6 +1134,11 @@ const AdminDashboard = () => {
               <table className="admin-table enhanced">
                 <thead>
                   <tr>
+                    <th>
+                      <button onClick={selectAllContacts} className="select-all-btn">
+                        {selectedContacts.length === allContacts.length ? <CheckSquare size={16} /> : <Square size={16} />}
+                      </button>
+                    </th>
                     <th>Email</th>
                     <th>Name</th>
                     <th>Discipline</th>
