@@ -16,7 +16,9 @@ import {
   BarChart3,
   TrendingUp,
   DollarSign,
-  Gift
+  Gift,
+  Calendar,
+  Target
 } from 'lucide-react';
 import {
   AreaChart,
@@ -44,6 +46,7 @@ const AdminDashboard = () => {
   const [loginError, setLoginError] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
+  const [timeframe, setTimeframe] = useState('all');
   
   // Data states
   const [stats, setStats] = useState(null);
@@ -61,6 +64,14 @@ const AdminDashboard = () => {
   });
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailResult, setEmailResult] = useState(null);
+
+  const timeframeOptions = [
+    { value: 'today', label: 'Today' },
+    { value: '7d', label: 'Last 7 Days' },
+    { value: '30d', label: 'Last 30 Days' },
+    { value: '90d', label: 'Last 90 Days' },
+    { value: 'all', label: 'All Time' }
+  ];
 
   // Check if already authenticated
   useEffect(() => {
