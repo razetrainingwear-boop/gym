@@ -744,6 +744,21 @@ const AdminDashboard = () => {
       case 'analytics':
         loadAnalytics();
         break;
+      case 'inventory':
+        loadInventory();
+        break;
+      case 'activity':
+        loadActivityLog();
+        break;
+      case 'discounts':
+        loadDiscountCodes();
+        break;
+      case 'email-logs':
+        loadEmailLogs();
+        break;
+      case 'duplicates':
+        loadDuplicates();
+        break;
       default:
         loadStats();
     }
