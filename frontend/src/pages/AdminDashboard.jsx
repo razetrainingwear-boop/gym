@@ -387,6 +387,276 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
+  // ============== NEW FEATURE FUNCTIONS ==============
+  
+  // Export to CSV
+  const exportToCSV = async () => {
+    try {
+      window.open(`${API_URL}/api/admin/export/contacts`, '_blank');
+    } catch (error) {
+      console.error('Failed to export:', error);
+    }
+  };
+
+  // Search contacts
+  const searchContacts = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('q', searchQuery);
+      if (filterDiscipline !== 'all') params.append('discipline', filterDiscipline);
+      if (filterSource !== 'all') params.append('source', filterSource);
+      if (customDateStart) params.append('start_date', customDateStart);
+      if (customDateEnd) params.append('end_date', customDateEnd);
+      
+      const res = await fetch(`${API_URL}/api/admin/search?${params}`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      setSearchResults(data.results || []);
+    } catch (error) {
+      console.error('Failed to search:', error);
+    }
+    setLoading(false);
+  };
+
+  // Pick giveaway winner
+  const pickGiveawayWinner = async () => {
+    if (!window.confirm('Pick a random giveaway winner?')) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/giveaway/pick-winner`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      if (data.success) {
+        setGiveawayWinner(data.winner);
+        alert(`Winner: ${data.winner.email}\nTotal entries: ${data.total_entries}`);
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error('Failed to pick winner:', error);
+    }
+    setLoading(false);
+  };
+
+  // Get user details
+  const loadUserDetails = async (email) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/user/${encodeURIComponent(email)}/details`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      setUserDetails(data);
+      setSelectedUser(email);
+    } catch (error) {
+      console.error('Failed to load user details:', error);
+    }
+    setLoading(false);
+  };
+
+  // Load inventory
+  const loadInventory = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/inventory`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      setInventory(data.inventory || []);
+    } catch (error) {
+      console.error('Failed to load inventory:', error);
+    }
+    setLoading(false);
+  };
+
+  // Update inventory
+  const updateInventory = async (productId, size, quantity) => {
+    try {
+      await fetch(`${API_URL}/api/admin/inventory/${productId}?size=${size}&quantity=${quantity}`, {
+        method: 'PUT',
+        headers: getAuthHeaders()
+      });
+      loadInventory();
+    } catch (error) {
+      console.error('Failed to update inventory:', error);
+    }
+  };
+
+  // Delete contact
+  const deleteContact = async (email) => {
+    if (!window.confirm(`Delete ALL data for ${email}? This cannot be undone.`)) return;
+    try {
+      await fetch(`${API_URL}/api/admin/contact/${encodeURIComponent(email)}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      loadAllContacts();
+    } catch (error) {
+      console.error('Failed to delete contact:', error);
+    }
+  };
+
+  // Bulk delete
+  const bulkDeleteContacts = async () => {
+    if (selectedContacts.length === 0) return;
+    if (!window.confirm(`Delete ${selectedContacts.length} contacts? This cannot be undone.`)) return;
+    
+    try {
+      await fetch(`${API_URL}/api/admin/bulk-delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ emails: selectedContacts })
+      });
+      setSelectedContacts([]);
+      loadAllContacts();
+    } catch (error) {
+      console.error('Failed to bulk delete:', error);
+    }
+  };
+
+  // Toggle contact selection
+  const toggleContactSelection = (email) => {
+    setSelectedContacts(prev => 
+      prev.includes(email) 
+        ? prev.filter(e => e !== email)
+        : [...prev, email]
+    );
+  };
+
+  // Select all contacts
+  const selectAllContacts = () => {
+    if (selectedContacts.length === allContacts.length) {
+      setSelectedContacts([]);
+    } else {
+      setSelectedContacts(allContacts.map(c => c.email));
+    }
+  };
+
+  // Load activity log
+  const loadActivityLog = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/activity-log?limit=100`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      setActivityLog(data.logs || []);
+    } catch (error) {
+      console.error('Failed to load activity log:', error);
+    }
+    setLoading(false);
+  };
+
+  // Load discount codes
+  const loadDiscountCodes = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/discount-codes`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      setDiscountCodes(data.codes || []);
+    } catch (error) {
+      console.error('Failed to load discount codes:', error);
+    }
+    setLoading(false);
+  };
+
+  // Create discount code
+  const createDiscountCode = async () => {
+    if (!newDiscountCode.code) return;
+    try {
+      await fetch(`${API_URL}/api/admin/discount-codes?code=${newDiscountCode.code}&discount_percent=${newDiscountCode.discount_percent}&max_uses=${newDiscountCode.max_uses}`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      setNewDiscountCode({ code: '', discount_percent: 10, max_uses: 0 });
+      loadDiscountCodes();
+    } catch (error) {
+      console.error('Failed to create discount code:', error);
+    }
+  };
+
+  // Load email logs
+  const loadEmailLogs = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/email-logs?limit=200`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      setEmailLogs(data.logs || []);
+      setEmailLogsSummary(data.summary || null);
+    } catch (error) {
+      console.error('Failed to load email logs:', error);
+    }
+    setLoading(false);
+  };
+
+  // Load duplicates
+  const loadDuplicates = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/duplicates`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      setDuplicates(data.duplicates || []);
+    } catch (error) {
+      console.error('Failed to load duplicates:', error);
+    }
+    setLoading(false);
+  };
+
+  // Merge duplicates
+  const mergeDuplicates = async (email) => {
+    if (!window.confirm(`Merge duplicate entries for ${email}?`)) return;
+    try {
+      await fetch(`${API_URL}/api/admin/merge-duplicates?email=${encodeURIComponent(email)}`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      loadDuplicates();
+    } catch (error) {
+      console.error('Failed to merge duplicates:', error);
+    }
+  };
+
+  // Add user note
+  const addUserNote = async (email) => {
+    if (!newNote.trim()) return;
+    try {
+      await fetch(`${API_URL}/api/admin/user/${encodeURIComponent(email)}/notes?note=${encodeURIComponent(newNote)}`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      setNewNote('');
+      loadUserDetails(email);
+    } catch (error) {
+      console.error('Failed to add note:', error);
+    }
+  };
+
+  // Resend email
+  const resendEmail = async (email, emailType = 'welcome') => {
+    if (!window.confirm(`Resend ${emailType} email to ${email}?`)) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/resend-email/${encodeURIComponent(email)}?email_type=${emailType}`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      alert(data.message);
+    } catch (error) {
+      console.error('Failed to resend email:', error);
+    }
+  };
+
+  // ============== END NEW FEATURE FUNCTIONS ==============
+
   const deleteSubscriber = async (email) => {
     if (!window.confirm(`Delete subscriber ${email}?`)) return;
     
