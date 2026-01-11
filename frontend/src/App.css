@@ -12543,9 +12543,208 @@ body {
   color: #ff6b6b;
 }
 
+.source-badge.giveaway {
+  background: rgba(236, 72, 153, 0.2);
+  color: #EC4899;
+}
+
+.source-badge.direct {
+  background: rgba(74, 159, 245, 0.2);
+  color: #4A9FF5;
+}
+
+.source-badge.early_access {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+}
+
+.source-badge.waitlist {
+  background: rgba(245, 158, 11, 0.2);
+  color: #F59E0B;
+}
+
 .source-badge.notify_me {
   background: rgba(46, 213, 115, 0.2);
   color: #2ed573;
+}
+
+/* Discipline Badges */
+.discipline-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.discipline-badge.mag {
+  background: rgba(74, 159, 245, 0.2);
+  color: #4A9FF5;
+}
+
+.discipline-badge.wag {
+  background: rgba(236, 72, 153, 0.2);
+  color: #EC4899;
+}
+
+.discipline-badge.unknown,
+.discipline-badge.other {
+  background: rgba(156, 163, 175, 0.2);
+  color: #9CA3AF;
+}
+
+/* Status Icons */
+.status-yes {
+  color: #10B981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-no {
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Waitlist Badge */
+.waitlist-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(245, 158, 11, 0.2);
+  color: #F59E0B;
+  cursor: help;
+}
+
+/* Orders Badge */
+.orders-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(139, 92, 246, 0.2);
+  color: #8B5CF6;
+}
+
+/* Table Scroll */
+.table-scroll {
+  overflow-x: auto;
+  margin: 0 -20px;
+  padding: 0 20px;
+}
+
+.admin-table.enhanced {
+  min-width: 1200px;
+}
+
+.admin-table.enhanced th,
+.admin-table.enhanced td {
+  padding: 12px 14px;
+  white-space: nowrap;
+}
+
+.email-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Contacts Summary Cards */
+.contacts-summary {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1200px) {
+  .contacts-summary {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .contacts-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+
+.summary-card .summary-number {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.summary-card .summary-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-card.giveaway {
+  border-color: rgba(236, 72, 153, 0.3);
+}
+.summary-card.giveaway .summary-number {
+  color: #EC4899;
+}
+
+.summary-card.early {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.summary-card.early .summary-number {
+  color: #10B981;
+}
+
+.summary-card.waitlist {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+.summary-card.waitlist .summary-number {
+  color: #F59E0B;
+}
+
+.summary-card.orders {
+  border-color: rgba(139, 92, 246, 0.3);
+}
+.summary-card.orders .summary-number {
+  color: #8B5CF6;
+}
+
+.summary-card.cart {
+  border-color: rgba(74, 159, 245, 0.3);
+}
+.summary-card.cart .summary-number {
+  color: #4A9FF5;
+}
+
+.summary-card.mag {
+  border-color: rgba(74, 159, 245, 0.3);
+}
+.summary-card.mag .summary-number {
+  color: #4A9FF5;
+}
+
+.summary-card.wag {
+  border-color: rgba(236, 72, 153, 0.3);
+}
+.summary-card.wag .summary-number {
+  color: #EC4899;
 }
 
 .status-badge {
