@@ -1216,14 +1216,104 @@ const AdminDashboard = () => {
                         )}
                       </td>
                       <td>{contact.signup_date ? new Date(contact.signup_date).toLocaleDateString() : '-'}</td>
+                      <td>
+                        <div className="action-btns">
+                          <button onClick={() => loadUserDetails(contact.email)} className="action-btn-sm view" title="View Details">
+                            <Eye size={14} />
+                          </button>
+                          <button onClick={() => resendEmail(contact.email)} className="action-btn-sm resend" title="Resend Email">
+                            <RotateCcw size={14} />
+                          </button>
+                          <button onClick={() => deleteContact(contact.email)} className="action-btn-sm delete" title="Delete">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                   {allContacts.length === 0 && (
-                    <tr><td colSpan="11" className="empty-row">No contacts found</td></tr>
+                    <tr><td colSpan="13" className="empty-row">No contacts found</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
+
+            {/* User Detail Modal */}
+            {selectedUser && userDetails && (
+              <div className="user-detail-modal">
+                <div className="modal-content">
+                  <button onClick={() => setSelectedUser(null)} className="close-modal">×</button>
+                  <h3>User Details: {selectedUser}</h3>
+                  
+                  {userDetails.user && (
+                    <div className="detail-section">
+                      <h4>Account Info</h4>
+                      <p><strong>Name:</strong> {userDetails.user.name || '-'}</p>
+                      <p><strong>Discipline:</strong> {userDetails.user.discipline || '-'}</p>
+                      <p><strong>Auth:</strong> {userDetails.user.auth_provider || '-'}</p>
+                      <p><strong>Joined:</strong> {new Date(userDetails.user.created_at).toLocaleString()}</p>
+                    </div>
+                  )}
+                  
+                  <div className="detail-section">
+                    <h4>Subscriptions ({userDetails.subscriptions?.length || 0})</h4>
+                    {userDetails.subscriptions?.map((s, i) => (
+                      <span key={i} className={`source-badge ${s.source}`}>{s.source}</span>
+                    ))}
+                  </div>
+                  
+                  <div className="detail-section">
+                    <h4>Waitlist ({userDetails.waitlist?.length || 0})</h4>
+                    {userDetails.waitlist?.map((w, i) => (
+                      <p key={i}>{w.product_name} - {w.size}</p>
+                    ))}
+                  </div>
+                  
+                  <div className="detail-section">
+                    <h4>Orders ({userDetails.orders?.length || 0})</h4>
+                    {userDetails.orders?.map((o, i) => (
+                      <p key={i}>Order #{o.order_id?.slice(0,8)} - ${o.total}</p>
+                    ))}
+                  </div>
+                  
+                  <div className="detail-section">
+                    <h4>Notes</h4>
+                    {userDetails.notes?.map((n, i) => (
+                      <div key={i} className="note-item">
+                        <p>{n.note}</p>
+                        <small>{new Date(n.created_at).toLocaleString()}</small>
+                      </div>
+                    ))}
+                    <div className="add-note">
+                      <input 
+                        type="text" 
+                        placeholder="Add a note..." 
+                        value={newNote}
+                        onChange={(e) => setNewNote(e.target.value)}
+                      />
+                      <button onClick={() => addUserNote(selectedUser)}>
+                        <MessageSquare size={14} /> Add
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="detail-section">
+                    <h4>Email History</h4>
+                    {userDetails.email_logs?.slice(0,5).map((e, i) => (
+                      <p key={i} className={`email-log-item ${e.status}`}>
+                        {e.email_type} - {e.status} - {new Date(e.sent_at).toLocaleDateString()}
+                      </p>
+                    ))}
+                  </div>
+                  
+                  <div className="modal-actions">
+                    <button onClick={() => resendEmail(selectedUser, 'welcome')} className="action-btn">
+                      <RotateCcw size={14} /> Resend Welcome
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
