@@ -12562,7 +12562,7 @@ body {
   overflow: hidden;
 }
 
-/* Dark overlay to completely hide glow by default */
+/* Dark overlay - no longer needed since glow is CSS-based */
 .product-image-wrapper-shop::after {
   content: '';
   position: absolute;
@@ -12570,17 +12570,10 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  /* Solid dark gradient that masks the glow around the shirt */
-  background: radial-gradient(ellipse 70% 80% at center, transparent 25%, rgba(10, 10, 10, 0.9) 50%, rgba(10, 10, 10, 1) 70%);
+  /* Keep vignette for edge cleanup */
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(10, 10, 10, 0.8) 90%, rgba(10, 10, 10, 1) 100%);
   pointer-events: none;
   z-index: 1;
-  transition: opacity 0.4s ease;
-  opacity: 1;
-}
-
-/* Remove overlay on hover to reveal glow */
-.product-card-shop:hover .product-image-wrapper-shop::after {
-  opacity: 0;
 }
 
 .product-image-shop {
@@ -12589,15 +12582,10 @@ body {
   object-fit: contain;
   position: relative;
   z-index: 0;
-  /* Desaturate the cyan glow by default */
-  filter: saturate(0);
   transition: filter 0.4s ease;
 }
 
-/* Show full color and glow on hover */
-.product-card-shop:hover .product-image-shop {
-  filter: saturate(1);
-}
+/* No changes needed on hover for shop cards - glow is in image */
 
 .product-placeholder-shop {
   display: flex;
